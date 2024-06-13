@@ -2,7 +2,7 @@
 
 ORG=openrobotics
 IMAGE=space_robots_demo
-TAG=latest
+TAG=harmonic
 
 VCS_REF=""
 VERSION=preview
@@ -14,6 +14,7 @@ echo ""
 echo "##### Building Space ROS Demo Docker Image #####"
 echo ""
 
+#DOCKER_BUILDKIT=0 
 docker build -t $ORG/$IMAGE:$TAG \
     --build-arg VCS_REF="$VCS_REF" \
     --build-arg VERSION="$VERSION" .

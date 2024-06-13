@@ -1,12 +1,12 @@
 repositories:
   demos:
     type: git
-    url: https://github.com/space-ros/demos.git
-    version: main
+    url: https://github.com/asimonov/demos.git
+    version: gazebo_harmonic
   gz_ros2_control:
     type: git
     url: https://github.com/ros-controls/gz_ros2_control.git
-    version: humble
+    version: iron
   qt_gui_core:
     type: git
     url: https://github.com/ros-visualization/qt_gui_core.git
@@ -25,8 +25,8 @@ repositories:
     version: humble
   simulation:
     type: git
-    url: https://github.com/space-ros/simulation.git
-    version: main
+    url: https://github.com/asimonov/simulation.git
+    version: gazebo_harmonic
   ros-humble-warehouse-ros-mongo:
     type: git
     url: https://github.com/ros-planning/warehouse_ros_mongo.git

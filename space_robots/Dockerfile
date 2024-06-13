@@ -19,7 +19,7 @@
 #   VCS_REF     - The git revision of the Space ROS source code (no default value).
 #   VERSION     - The version of Space ROS (default: "preview")
 
-FROM openrobotics/moveit2:latest
+FROM openrobotics/moveit2:harmonic
 
 # Define arguments used in the metadata definition
 ARG VCS_REF
@@ -37,8 +37,8 @@ LABEL org.label-schema.vcs-ref=${VCS_REF}
 
 # Define a few key variables
 ENV DEMO_DIR=${HOME_DIR}/demos_ws
-ENV IGNITION_VERSION fortress
-ENV GZ_VERSION fortress
+ENV IGNITION_VERSION harmonic
+ENV GZ_VERSION harmonic
 
 # Disable prompting during package installation
 ARG DEBIAN_FRONTEND=noninteractive
@@ -78,7 +78,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   sudo apt-get install libssl-dev build-essential devscripts debian-keyring fakeroot debhelper cmake libboost-dev libsasl2-dev libicu-dev libzstd-dev doxygen -y
 RUN wget https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.6.7/mongo-cxx-driver-r3.6.7.tar.gz
 RUN tar -xzf mongo-cxx-driver-r3.6.7.tar.gz
-RUN cd mongo-cxx-driver-r3.6.7/build && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local && sudo cmake --build . --target EP_mnmlstc_core && cmake --build . && sudo cmake --build . --target install
+RUN cd mongo-cxx-driver-r3.6.7/build \
+    && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && sudo cmake --build . -j 8 --target EP_mnmlstc_core \
+    && cmake --build . \
+    && sudo cmake --build . -j 8 --target install
 
 # Get the source for the dependencies
 # RUN vcs import src < /tmp/demo_generated_pkgs.repos
@@ -91,6 +95,26 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 && /bin/bash -c 'source "${SPACEROS_DIR}/install/setup.bash"' \
 && /bin/bash -c 'source "${MOVEIT2_DIR}/install/setup.bash"' \
 && rosdep install --from-paths src --ignore-src -r -y --rosdistro ${ROSDISTRO}
+
+# for some reason Gazebo Harmonic libs are not installed using rosdep above
+#    ERROR: the following packages/stacks could not have their rosdep keys resolved
+#    to system dependencies:
+#    gz_ros2_control: No definition of [gz-plugin2] for OS [ubuntu]
+#    ros_gz_bridge: Cannot locate rosdep definition for [gz-transport13]
+#    ros_gz_image: Cannot locate rosdep definition for [gz-transport13]
+#    warehouse_ros_mongo: No definition of [mongodb] for OS version [jammy]
+#    ros_gz_sim: Cannot locate rosdep definition for [gz-transport13]
+#    Continuing to install resolvable dependencies...
+
+# here is manual install of what is missing
+RUN sudo wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    sudo apt-get update -y \
+    && sudo apt install -y libgz-math7-dev libgz-transport13-dev libgz-sim8-dev
+# manual compile fix for https://github.com/ros-controls/gz_ros2_control/issues/260
+RUN sed -i s/hardware_plugin_name/hardware_class_type/ /home/spaceros-user/demos_ws/src/gz_ros2_control/gz_ros2_control/src/gz_ros2_control_plugin.cpp
 
 # Build the demo
 RUN /bin/bash -c 'source ${SPACEROS_DIR}/install/setup.bash && source ${MOVEIT2_DIR}/install/setup.bash \

@@ -6,8 +6,8 @@ control_toolbox
 eigen_stl_containers
 geometric_shapes
 graph_msgs
-ignition/ignition_cmake2_vendor
-ignition/ignition_math6_vendor
+gazebo/gz_cmake2_vendor
+gazebo/gz_math7_vendor
 image_common
 interactive_markers
 joint_state_publisher

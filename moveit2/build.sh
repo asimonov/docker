@@ -2,7 +2,7 @@
 
 ORG=openrobotics
 IMAGE=moveit2
-TAG=latest
+TAG=harmonic
 
 VCS_REF=""
 VERSION=preview
